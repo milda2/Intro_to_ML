@@ -1,0 +1,209 @@
+# recap
+y = 2.5
+print(type(y))
+print(y, y + 1, y * 2, y ** 2)
+
+xs = [3, 1, 2]   # Create a list
+print(xs, xs[2])
+print(xs[-1])     # Negative indices count from the end of the list; prints "2"
+
+xs[2] = 'foo'    # Lists can contain elements of different types
+print(xs)
+
+
+nums = list(range(5))    # range is a built-in function that creates a list of integers
+print(nums)         # Prints "[0, 1, 2, 3, 4]"
+print(nums[2:4])    # Get a slice from index 2 to 4 (exclusive); prints "[2, 3]"
+print(nums[2:])     # Get a slice from index 2 to the end; prints "[2, 3, 4]"
+print(nums[:2])     # Get a slice from the start to index 2 (exclusive); prints "[0, 1]"
+print(nums[:])      # Get a slice of the whole list; prints ["0, 1, 2, 3, 4]"
+print(nums[:-1])    # Slice indices can be negative; prints ["0, 1, 2, 3]"
+nums[2:4] = [8, 9] # Assign a new sublist to a slice
+print(nums)         # Prints "[0, 1, 8, 9, 4]"
+
+nums = list(range(5))
+for x in nums:
+    print(x)
+    
+a = 0
+for step in range(10):
+  a = a + 2
+  print('step = {}, a = {}'.format(step, a))
+
+print('Final a = {}'.format(a))
+
+
+# GRADIENT DESCENT
+import numpy as np
+cluster_centres = np.array([[-1, -3], [2, 2]])
+colour_list = ['red', 'blue']
+
+def generateData(num_samples_pc, dimensions=2, cluster_locs=cluster_centres): # defining a function
+    data = []
+    labels = []
+
+    for c, locs in enumerate(cluster_locs): # enumerate similar to 'in range' are used for loop generation without the need to change itteration manually
+        pos = np.random.randn(num_samples_pc, dimensions) + locs
+        data.append(pos)
+        labels.append(np.ones(num_samples_pc) * c)
+
+    data_np = np.concatenate(data, axis=0)
+    labels_np = np.concatenate(labels, axis=0)
+    return data_np, labels_np
+
+train_data, train_labs = generateData(100)
+
+def sigmoid(x):
+  sigmoid_value = 1 / (1 + np.exp(-x))
+  return sigmoid_value
+
+def predictive_prob(x, a, b, c):
+  f_x = x[:, 0] * a + x[:, 1] * b + c # might be easiest to start with for loop
+  pred_prob = sigmoid(f_x)
+  return pred_prob
+
+def bce_loss(pred_probs, y):
+  ## TODO ##
+  pred_probs = np.clip(pred_probs, 1e-6, 1 - 1e-6)
+  bce = np.sum(-y * np.log(pred_probs) - (1 - y) * np.log(1 - pred_probs))
+  ## TODO end ##
+  return bce
+
+def compute_gradients(x, a, b, c, y):
+  grad_a = np.sum(((predictive_prob(x, a, b, c)) - y) * x[:, 0])
+  grad_b = np.sum(((predictive_prob(x, a, b, c)) - y) * x[:, 1])
+  grad_c = np.sum(((predictive_prob(x, a, b, c)) - y))
+  return grad_a, grad_b, grad_c
+  
+# Initial values of the weights (here's we're updating 3 values a, b,c )
+a = 2
+b = -1
+c = -5
+
+# Define parameters for the iteartive procedure
+num_steps = 100
+lr = 5e-3
+print_every = 10
+
+# Perform iteration!
+for i in range(num_steps):
+
+  # define an update operation
+  grad_a, grad_b, grad_c = compute_gradients(train_data, a, b, c, train_labs)
+
+  # the update step
+  a = a - lr * grad_a
+  b = b - lr * grad_b
+  c = c - lr * grad_c
+
+  if i % print_every == 0:
+    print("Iteration %i\tLoss %.3f" % (i, bce_loss(predictive_prob(train_data, a, b, c), train_labs)))
+
+# Final weights
+print(a, b, c)
+
+# Initial values of the weights (here's we're updating 3 values a, b,c )
+a = 2
+b = -1
+c = -5
+
+# Define parameters for the iteartive procedure
+num_steps = 100
+lr = 5e-3
+print_every = 10
+
+# Perform iteration!
+for i in range(num_steps):
+
+  # define an update operation
+  grad_a, grad_b, grad_c = compute_gradients(train_data, a, b, c, train_labs)
+
+  # the update step
+  a = a - lr * grad_a
+  b = b - lr * grad_b
+  c = c - lr * grad_c
+
+  if i % print_every == 0:
+    print("Iteration %i\tLoss %.3f" % (i, bce_loss(predictive_prob(train_data, a, b, c), train_labs)))
+
+# Final weights
+print(a, b, c)
+
+if i % b == 0 # can be used to print statements every time the iteration number  𝑖  hits a multiple of  𝑏 .
+
+for x in [-1, 0, 1]:
+    print(sign(x))
+    
+def hello(name, loud=False):
+    if loud:
+        print('HELLO, {}'.format(name.upper()))
+    else:
+        print('Hello, {}!'.format(name))
+
+hello('Bob')
+hello('Fred', loud=True)
+
+## classes
+
+class Person:
+
+  def __init__(self, first_name, last_name): #__init__ function is called when you instantiate
+    # Create instance variables
+    self.first_name = first_name
+    self.last_name = last_name
+  
+  def get_full_name(self):
+    # Instance method
+    full_name = self.first_name + ' ' + self.last_name
+    return full_name
+    
+# Construct a new object instance of the Person class
+obj = Person('Ada', 'Lovelace')
+
+print(obj.first_name) # prints 'Ada' because it was defined in __init__
+print(obj.get_full_name())
+
+#Inheritance
+class parent:
+  statements
+
+class child(parent):
+  statements
+
+
+class Intro(Person):
+
+  def __init__(self, first_name, last_name, pronoun):
+    super().__init__(first_name, last_name) # the super() line explicitly passes these parameters (first_name, last_name) to the parent class (Person)'s __init__ function.
+    self.pronoun = pronoun
+
+  def describe(self):
+    line = self.pronoun + ' is ' + self.get_full_name() + '.'
+    return line
+
+child = Intro('Ada', 'Lovelace', 'She')
+print(child.get_full_name()) # inherited method from Person class
+print(child.describe())
+
+## more classes
+
+import torch
+from torch import nn
+
+class OneLayerNet(nn.Module):
+    def __init__(self, input_dim, output_dim): 
+        super().__init__()
+        self.my_layer_1 = nn.Linear(input_dim, output_dim)
+        self.activation = nn.Sigmoid()
+
+    def forward(self, x):
+        hid1 = self.my_layer_1(x)
+        output = self.activation(hid1)
+        return output
+
+# to instantiate
+my_network = OneLayerNet(3, 4) 
+
+# to do a forward pass on some random data
+x = torch.rand(16, 3)
+output = my_network.forward(x)
