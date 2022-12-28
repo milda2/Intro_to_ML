@@ -1,0 +1,137 @@
+import numpy as np
+data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15], [16,17,18]])
+print(data)
+# numpy arrays N - number of data points(y), d - number of dimensions (x). 
+
+print('Data shape (N x d): ', data.shape)
+print('No. of datapoints (N): ', data.shape[0])
+print('Dimension of each datapoint (d): ', data.shape[1])
+
+
+#Let's say we want to split our data array by taking 80% of the data as our training set and the rest as testing set.
+train_size = int(0.8 * len (data)) # len(data) gives y or N, the number of data points/rows. int in python == round in matlab
+print('Train set shoud have {} datapoints.'.format(train_size))
+
+# slicing along the datapoint dimension (dim = 0)
+
+train_set = data[:train_size] # this is equivalent to data[:train_size, :]
+test_set = data[train_size:] # this is equivalent to data[train_size:, :]
+
+print('Shape of train set: ', train_set.shape)
+print('Shape of test set: ', test_set.shape)
+
+
+# we want to draw predictions about the classifier 'variable 3' based on the given data which includes 'variable 1 & 2'
+# slicing along the feature dimension (dim = 1)
+train_x = train_set[:, :2]
+train_y = train_set[:, 2:]
+print('Shape of train features X: ', train_x.shape)
+print('Shape of train labels y: ', train_y.shape)
+
+test_x = test_set[:, :2]
+test_y = test_set[:, 2:]
+print('Shape of test features X: ', test_x.shape)
+print('Shape of test labels y: ', test_y.shape)
+
+#transposing
+print(train_x)
+print("transpose:\n", train_x.T)
+
+# Let's first create two feature arrays of shape (N,).
+
+N = 4
+feature_1 = np.arange(N)
+feature_2 = np.arange(N, N*2)
+print(feature_1)
+print(feature_2)
+print(feature_1.shape, feature_2.shape)
+
+# to combine
+x = np.concatenate([feature_1, feature_2], axis=0)
+x.shape
+print(x)
+print('shape: ', x.shape)
+
+feature_1_exp = np.expand_dims(feature_1, 1)
+print(feature_1_exp.shape)
+
+#different way
+# first expand dimensions of the features
+feature_1_exp = np.expand_dims(feature_1, 1)
+feature_2_exp = np.expand_dims(feature_2, 1)
+print(feature_1_exp.shape, feature_2_exp.shape)
+
+# then concatenate
+x = np.concatenate([feature_1_exp, feature_2_exp], axis=1)
+print(x.shape)
+
+#stacking
+x = np.stack([feature_1, feature_2], axis=1)
+print(x.shape)
+
+#math recap
+a = np.array([[1,2],[3,4]], dtype=np.float64)
+b = np.array([[5,6],[7,8]], dtype=np.float64)
+
+# Elementwise sum; both produce the array
+print(a + b)
+print(np.add(a, b))
+print(a - b)
+print(np.subtract(a, b))
+print(a * b)
+print(np.multiply(a, b))
+print(a / b)
+print(np.divide(a, b))
+print(np.sqrt(a))
+
+a = np.array([[1,2],[3,4], [5,6]])
+print(a)
+print(np.sum(a))  # Compute sum of all elements; prints "21"
+
+print(np.sum(a, axis=0))  # Compute sum of each column; prints "[9 12]" |
+print(np.sum(a, axis=1))  # Compute sum of each row; prints "[3 7 11]" ->
+
+# We will add the vector v to each row of the matrix x,
+# storing the result in the matrix b
+a = np.array([[1,2,3], [4,5,6], [7,8,9], [10, 11, 12]])
+v = np.array([1, 0, 1])
+b = a + v  # Add v to each row of x using broadcasting
+print(b)
+
+# Multiply a matrix by a constant:
+a = np.array([[1,2,3], [4,5,6]])
+# x has shape (2, 3). Numpy treats scalars as arrays of shape ();
+# these can be broadcast together to shape (2, 3), producing the
+# following array:
+print(a * 2)
+
+a = np.array([[1,2],[3,4]])
+b = np.array([[5,6],[7,8]])
+
+v = np.array([9,10])
+w = np.array([11, 12])
+
+# Inner product of vectors; produces 219
+print(np.matmul(v, w))
+print(np.matmul(a, v))
+
+# Matrix / matrix product; produces the rank 2 array
+# [[19 22]
+#  [43 50]]
+print(np.matmul(a, b))
+
+# Compute inverse of a matrix; 
+a_inverse = np.linalg.inv(a)
+print(a_inverse)
+
+# check that the product of a matrix and its inverse ~ identity
+print(np.matmul(a_inverse, a))
+
+#least square estimate in Linear Regression:
+# get some sample data as X and y
+N, d = 4, 2
+X = np.random.rand(N, d)
+y = np.ones((N, 1))
+
+# define a according to our equation
+a = np.matmul(np.matmul(np.linalg.inv(np.matmul(X.T, X)), X.T), y)
