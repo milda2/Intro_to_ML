@@ -1,0 +1,67 @@
+# Get indices for five test points from the full dataset.
+test_sample = [89, 20, 72, 67, 12]
+
+test_petal_length = np.take(dataset.data[:, 2], test_sample)
+test_petal_width = np.take(dataset.data[:, 3], test_sample)
+
+plot_iris_dataset(test=True)
+
+# TODO: call a function to plot the regression line for the test dataset.
+data = (petal_length, petal_width)
+a, b = iris_least_squares_estimate(data)
+plot_iris_dataset_with_line(a=a, b=b, residuals=True, test=True)
+
+def predict_petal_widths(a, b):
+  
+  for (x, y_true) in zip(test_petal_length, test_petal_width):
+    
+    y_predicted = a * x +b # TODO: compute the prediction
+    print('Ground truth: {}\tPrediction: {}'.format(y_true, y_predicted))
+    
+predict_petal_widths(a, b)
+
+
+data = (test_petal_length, test_petal_width)
+mean_squared_error(a, b, data) # TODO: pass the relevant arguments here.
+
+# generate the housing price dataset
+location = np.array([1, 1, 2, 2, 3, 3, 4, 4, 4, 5])
+size = np.array([50, 90, 30, 40, 36, 45, 40, 78, 108, 200])
+price = np.array([300, 500, 300, 350, 450, 500, 400, 600, 800, 400])
+
+data_3d = (location, size, price)
+
+plot_3d_data_samples(data_3d)
+
+
+N = location.shape # get the number of observations
+X2 = np.reshape(location, (N[0], 1))
+X3 = np.reshape(size, (N[0], 1))
+Y3 = np.reshape(price, (N[0], 1))
+
+
+
+# TODO: create the X matrix 
+X11 = np.ones((N[0], 1))
+
+# TODO: create the y vector
+Y11 = np.ones((N[0],0))
+
+X = np.concatenate((X2, X3, X11), axis=1)
+Y = np.concatenate((Y3, Y11), axis=1)
+
+print(X)
+print(Y)
+
+from sklearn.linear_model import LinearRegression
+
+# X, y is the common convention for representing features and labels.
+# In our case X is petal_length and y is petal_width.
+X = petal_length
+y = petal_width
+
+model = LinearRegression().fit(X.reshape(-1, 1), y)
+
+a = model.coef_[0]
+b = model.intercept_
+print("Coefficient: {}, intercept: {}".format(a, b))
