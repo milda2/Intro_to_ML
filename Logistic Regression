@@ -1,0 +1,80 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+cluster_centres = np.array([[-1, -3], [2, 2]])
+colour_list = ['red', 'blue']
+
+def generateData(num_samples_pc, dimensions=2, cluster_locs=cluster_centres):
+    data = []
+    labels = []
+
+    for c, locs in enumerate(cluster_locs):
+        pos = np.random.randn(num_samples_pc, dimensions) + locs
+        data.append(pos)
+        labels.append(np.ones(num_samples_pc) * c)
+
+    data_np = np.concatenate(data, axis=0)
+    labels_np = np.concatenate(labels, axis=0)
+    return data_np, labels_np
+
+train_data, train_labs = generateData(100)
+test_data, test_labs = generateData(10)
+
+def plot_data(data, labs, a=None, b=None, c=None, color=colour_list):
+  plt.xlim([-8, 8])
+  plt.ylim([-8, 8])
+  for ic in range(2):
+      ind_class = np.where(labs == ic)
+      #color = plt.cm.Set1(ic)
+      plt.scatter(data[ind_class, 0], data[ind_class, 1], s=10, color=color[ic], label=str(ic))
+
+  if a is not None and b is not None and c is not None:
+    x = np.linspace(-8, 8, 10)
+    y = ( - b * x - c) / a
+    plt.plot(x, y)
+    
+  plt.ylabel("x1")
+  plt.xlabel("x2")
+  plt.gca().set_aspect('equal')
+  plt.show()
+  
+plot_data(train_data, train_labs)
+#decision boundary
+
+plot_data(train_data, train_labs, a=5, b=5, c=1)
+
+def sigmoid(x):
+  
+  sigmoid_value = 1 / (1 + np.exp(-x))
+  
+  return sigmoid_value
+  
+t = np.linspace(-10, 10, 100)
+sigmoid_t = sigmoid(t)
+plt.plot(t, sigmoid_t, 'b-')
+plt.xlim([-10, 10])
+#plt.gca().set_aspect('equal')
+plt.xlabel("input t")
+plt.ylabel("sigmoid value")
+plt.grid(True)
+plt.show()
+
+def predictive_prob(x, a, b, c):
+  ## TODO ##
+  pred_prob = 1 / (1 + np.exp(- (c + b * x + a* x) ) )
+  #pred_prob = sigmoid(x)
+  ## TODO end ##
+  return pred_prob
+  
+center_red = cluster_centres[0, :].reshape(1, -1)
+center_blue = cluster_centres[1, :].reshape(1, -1)
+
+# TODO call a function to gete the predictive probabilities that center_red and center_blue are from the blue class.
+prob_red = predictive_prob(center_red, 1, 6, -1)
+prob_blue = predictive_prob(center_blue, 1, 6, -1)
+
+print("Probability that center_red is from the blue class is: " + str(prob_red))
+print("Probability that center_blue is from the blue class is: " + str(prob_blue))
+
+
+  
