@@ -78,3 +78,86 @@ print("Probability that center_blue is from the blue class is: " + str(prob_blue
 
 
   
+def bce_loss(pred_probs, y):
+  term1 = (1 -y) *np.log(1 - pred_probs)
+  term2 = y * np.log(pred_probs)
+  bce = np.sum(-term2 - term1)
+
+  ## TODO end ##
+  return bce
+  
+red_label = 0
+blue_label = 1
+
+center_red = cluster_centres[0, :].reshape(1, -1)
+center_blue = cluster_centres[1, :].reshape(1, -1)
+
+prob_red = predictive_prob(center_red, a=1, b=6, c=-1)
+prob_blue = predictive_prob(center_blue, a=1, b=6, c=-1)
+
+print("Value of BCE for red center: " + str(bce_loss(prob_red, red_label)))
+print("Value of BCE for blue center: " + str(bce_loss(prob_blue, blue_label)))
+
+a=5
+b=5
+c=1
+
+plot_data(train_data, train_labs, a, b, c)
+print("BCE loss: " + str(bce_loss(predictive_prob(train_data, a, b, c), train_labs)))
+
+
+from matplotlib.font_manager import X11FontDirectories
+def compute_gradients(x, a, b, c, y):
+  ## TODO ## 
+  x1 = x[:,0:1]
+  x2 = x[:,1:2]
+  sigma = 1
+  i = []
+  for i in range (len(y)):
+    grad_a = np.sum((sigma * (a * x1[i] + b* x2[i] +c) - y[i]) * x)
+    grad_b = np.sum((sigma * (a * x1[i] + b* x2[i] +c) - y[i]) * x)
+    grad_c = np.sum((sigma * (a * x1[i] + b* x2[i] +c) - y[i]) * x)
+    
+  ## TODO end ##
+  return grad_a, grad_b, grad_c
+
+compute_gradients(train_data, 5, 2, 1, test_labs)
+
+def optimize(train_data, train_labs, num_steps):
+    a, b, c = 2, -1, -5
+    lr = 5e-3
+    for i in range(num_steps):
+      
+      grad_a, grad_b, grad_c = compute_gradients(train_data, a, b, c, train_labs)
+    
+
+      if i % 10 == 0:
+        print("Iteration %i\tLoss %.3f" % (i, bce_loss(predictive_prob(train_data, a, b, c), train_labs)))
+        
+    plot_data(train_data, train_labs, a, b, c)
+
+    return a, b, c
+
+
+a_opt, b_opt, c_opt = optimize(train_data, train_labs, 100)
+print("The optimised parameters are: a=" + str(a_opt) + ", b=" + str(b_opt) + ", c=" + str(c_opt))
+
+print(test_data.shape, test_labs.shape)
+print("Test data:", test_data)
+print("Test labels:", test_labs)
+
+test_prob = predictive_prob(test_data, a=a_opt, b=b_opt, c=c_opt)
+print(test_prob)
+
+def predict_labels(x, a, b, c):
+  ## TODO ##
+  prob_blue = predictive_prob(x, a, b, c)
+  pred_labels = np.round(prob_blue)
+  ## TODO end ##
+  return pred_labels
+
+
+test_labs_predicted = predict_labels(test_data, a=a_opt, b=b_opt, c=c_opt)
+print("Predictions: " , test_labs_predicted)
+print("Real labels: ", test_labs)
+
