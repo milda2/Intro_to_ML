@@ -1,0 +1,234 @@
+import numpy as np
+import torch # the magical NN package
+from torch import nn, optim
+
+import matplotlib
+%matplotlib inline
+import matplotlib.pyplot as plt
+
+torch.manual_seed(42) #This is to get the same result everytime
+
+#@title Helper Functions (for generating random dataset)
+
+#Modified from https://github.com/tensorflow/playground/blob/master/src/dataset.ts 
+
+def generate_dataset1(n=200):
+  np.random.seed(42)
+  r1 = 2*np.random.rand(n)
+  angle = np.random.rand((n))*2*np.pi
+  x1 = r1*np.cos(angle)
+  y1 = r1*np.sin(angle)
+  data1 = np.asarray((x1,y1))
+
+  r2 = 2*np.random.rand(n) +3
+  angle2 = np.random.rand((n))*2*np.pi
+  x2 = r2*np.cos(angle)
+  y2 = r2*np.sin(angle)
+  data2 = np.asarray((x2,y2))
+
+  data = np.swapaxes(np.concatenate((data1,data2), axis =-1),0,1)
+  labels = np.concatenate((np.zeros(n, dtype=int), np.ones(n, dtype=int)))
+
+  #shuffle
+  c = list(zip(data, labels))
+  np.random.shuffle(c)
+  data, labels = zip(*c)
+
+  return np.asarray(data), np.asarray(labels)
+
+def generate_dataset2(n=100):
+  np.random.seed(42)
+  def genSpiral(n, d, noise=0.01):
+    x =[]
+    y =[]
+    for k in range(n):
+      r = k/n*5
+      t = 1.75*k/ n * 2 * np.pi + d
+      x.append(r*np.sin(t) + (2*np.random.rand()-1) * noise)
+      y.append(r*np.cos(t) + (2*np.random.rand()-1) * noise)
+    return np.asarray(x), np.asarray(y)
+
+  x1, y1 = genSpiral(n, 0)
+  data1 = np.asarray((x1,y1))
+
+  x2, y2 = genSpiral(n, np.pi)
+  data2 = np.asarray((x2,y2))
+
+  data = np.swapaxes(np.concatenate((data1,data2), axis =-1),0,1)
+  labels = np.concatenate((np.zeros(n, dtype=int), np.ones(n, dtype=int)))
+
+  #shuffle
+  c = list(zip(data, labels))
+  np.random.shuffle(c)
+  data, labels = zip(*c)
+
+  return np.asarray(data), np.asarray(labels)
+  
+# First we need to import PyTorch and the important functions
+torch.manual_seed(0) 
+import torch
+import torch.nn as nn
+
+m = 3
+n = 4
+x = torch.tensor([1.0, 2.0, 3.0, 4.0])
+# TO DO add your own layer here
+my_layer = nn.Linear(n, m)
+# TO Do call your layer to perform Wx + b
+output = my_layer(x)
+# Now pass it through an activation, you may want to search the pytorch webiste to find sigmoid
+m = nn.Sigmoid()
+fx = m(output)
+print(fx)
+
+print("W", my_layer.weight)
+print("b", my_layer.bias)
+
+class OneLayerNet(nn.Module):
+    def __init__(self, input_dim, output_dim): # this function is called when we make a new OneLayerNet()
+        super().__init__()
+        print("You have made a new layer with input size %i and output size %i" % (input_dim, output_dim))
+        self.my_layer_1 = nn.Linear(input_dim, output_dim)
+        self.activation = nn.Sigmoid()
+
+    def forward(self, x):
+        print("Running forward pass!")
+        hid1 = self.my_layer_1(x)
+        output = self.activation(hid1)
+        return output
+
+input_d = 4
+output_d = 4
+my_one_layer_net = OneLayerNet(input_d, output_d) # This creates an 'instance' i.e. makes a OneLayerNet for you by calling OneLayerNet.__init__(input_dim, output_dim)
+
+x = torch.tensor([1, 2, 3, 4], dtype=torch.float)
+print("f(x) = ", my_one_layer_net(x)) # this calls my_one_layer_net.forward(x)
+
+class MLP(nn.Module): # PyTorch needs to have nn.Module in brackets so it knows this is a neural network
+
+    def __init__(self, input_dim, output_dim):
+        super().__init__() # PyTorch needs this line otherwise it gets upset
+        hidden_dim = 10
+        
+        self.layer1 = nn.Linear(input_dim, hidden_dim) 
+        # TO-DO: complete below
+        self.layer2 = nn.Linear(hidden_dim, 1)
+        self.activation1 = nn.ReLU()
+        self.activation2 = nn.Sigmoid()
+
+    def forward(self, x):
+        #TO-DO: complete below
+        hid1 =  self.layer1(x)
+        act1 = self.activation1(hid1)
+        hid2 = self.layer2(act1)
+        output = self.activation2(hid2)
+        return output
+        
+torch.manual_seed(0) 
+input_d = 2
+output_d = 1
+model = MLP(input_d, output_d) # creating an instance of our MLP et voila!
+
+#print a summary of the network
+print(model)
+
+x = torch.randn(input_d)
+print("Output:", model(x))
+
+torch.manual_seed(0)
+
+x = torch.randn(5, input_d)
+print("Batched output:", model(x))
+
+# TO DO find a loss function to perform binary classification
+loss_function = nn.BCELoss()
+
+input = torch.tensor([0.1, 0.8, 0.3])
+target = torch.tensor([0.0, 1.0, 0.0])
+print(loss_function(input, target))
+
+torch.manual_seed(0)
+X_data,Y_data = generate_dataset1() # this generates the co-centric Gaussians dataset
+X_data_test, Y_data_test = generate_dataset1(50)
+
+# X,Y = generate_dataset2() #this generates the spiral dataset
+# X_test, Y_test = generate_dataset2(50) #this generates the spiral dataset
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+colors = ["lightblue", "orange"]
+for cl in range(2):
+  x1 = X_data[Y_data==cl,0]
+  x2 = X_data[Y_data==cl,1]
+  plt.plot(x1, x2, "o", color=colors[cl])
+ax.set_aspect('equal')
+
+Y = torch.tensor(Y_data).view(len(Y_data),1).float()
+X = torch.tensor(X_data).float()
+Y_test = torch.tensor(Y_data_test).view(len(Y_data_test),1).float()
+X_test = torch.tensor(X_data_test).float()
+
+# Task: define the training loop 
+def take_step(model, loss_function, data, optimizer):
+    # unpacking our data
+    x, labels = data
+
+    # Forward pass
+    # TO-DO: compute the predictions
+    preds = model(x)
+
+    # TO-DO: compute the loss for the prediction and corect labels
+    loss = loss_function(preds, labels)
+
+    # Backward pass
+    # For each paramter PyTorch accumulates gradients in one place, so we need to make sure to initialise them to 0
+    optimizer.zero_grad() 
+
+    # TO-DO: Compute the gradient
+    loss.backward()
+
+    # TO-DO: take a gradient step
+    optimizer.step()
+
+    return model, loss
+    
+model = MLP(2, 1)
+
+optimizer = optim.SGD(model.parameters(), lr=0.1)
+
+#Run the code
+iterations = 100
+
+for i in range(iterations):
+  model, loss = take_step(model, loss_function, (X,Y), optimizer)
+  if i % 10 == 0:
+    print("Iteration %i, Loss %.3f" % (i, loss))
+    
+#TO-DO: compute the test accuracy (using X_test and Y_test)
+predictions = model(X_test)
+labels = Y_test
+post_training_acc = ((predictions > 0.5) == Y_test).float().mean().item()
+print(post_training_acc)
+
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+N = 100
+X1, X2 = torch.meshgrid(torch.linspace(-5, 5, N), torch.linspace(-5, 5, N))
+X_grid = torch.stack([X1.flatten(), X2.flatten()], dim=1)
+Y_pred = (model.forward(X_grid) > 0.5).squeeze().int()
+
+colors = ["lightblue", "orange"]
+for cl in range(2):
+  x1 = X_grid[Y_pred==cl,0]
+  x2 = X_grid[Y_pred==cl,1]
+  plt.plot(x1, x2, "o", color=colors[cl], alpha=0.05)
+
+for cl in range(2):
+  x1 = X_data[Y_data==cl,0]
+  x2 = X_data[Y_data==cl,1]
+  plt.plot(x1, x2, "o", color=colors[cl])
+
+ax.set_aspect('equal')
