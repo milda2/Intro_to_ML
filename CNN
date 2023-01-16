@@ -1,0 +1,75 @@
+from random import randint
+import torch, torchvision
+from google.colab import files as FILE
+import os
+import requests                                              
+import urllib
+import PIL
+import matplotlib.pyplot as plt
+import cv2
+from torch.nn.functional import conv2d
+from pathlib import Path
+from torchvision.datasets import MNIST
+from torchvision.transforms import Normalize
+from torch import nn
+from torchvision import transforms
+import torch.nn.functional as F
+import time
+
+!wget www.di.ens.fr/~lelarge/MNIST.tar.gz
+!tar -zxvf MNIST.tar.gz
+
+str(Path.home())
+
+# Run this cell to load the data and define x_train, y_train
+data_path = '.'
+
+# train data
+train_data = MNIST(data_path, train=True)
+X_data_train = train_data.data.float().unsqueeze(1) # we add the channel dimension
+Y_data_train = train_data.targets
+
+# test data
+test_data = MNIST(data_path, train=False)
+X_data_test = test_data.data.float().unsqueeze(1) 
+Y_data_test = test_data.targets
+
+# check the data type
+print(type(X_data_train))
+# check the data shapes
+print(X_data_train.shape, Y_data_train.shape)
+print(X_data_test.shape, Y_data_test.shape)
+
+# Run this cell to visualize random images from the train dataset
+plt.figure(figsize=(10,10))
+
+num_images = 25
+for i in range(num_images):
+  plt.subplot(5,5,i+1)
+  idx = randint(0,len(X_data_train)-1)
+  plt.imshow(X_data_train[idx,:,:].squeeze(), cmap='gray')
+  plt.title(str(Y_data_train[idx].numpy()))
+  plt.axis('off')
+plt.show()
+
+x_sample = X_data_train[:5]
+print('input shape: ', x_sample.shape)
+
+# Try changing these hyperparameters!
+out_channels = 8
+kernel_size = 3
+stride = 1
+padding = 0
+
+# define the convolutional layer
+my_conv = nn.Conv2d(in_channels=1, # DO NOT CHANGE in_channels, this has to be 1 (grayscale images)
+                    out_channels=out_channels,
+                    kernel_size=kernel_size,
+                    stride=stride,
+                    padding=padding)
+
+# pass 
+out = my_conv(x_sample)
+
+print('output shape: ', out.shape) # is this the same as our input shape
+
