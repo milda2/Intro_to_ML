@@ -73,3 +73,289 @@ out = my_conv(x_sample)
 
 print('output shape: ', out.shape) # is this the same as our input shape
 
+layer1 = nn.Conv2d(in_channels=1,out_channels=10, kernel_size=3)
+layer2 = nn.Conv2d(in_channels=10, out_channels=5, kernel_size=3)
+
+print('input shape: ', x_sample.shape)
+out_1 = layer1(x_sample)
+print('shape after 1st layer: ', out_1.shape)
+out_2 = layer2(out_1)
+print('shape after 2nd layer: ', out_2.shape)
+
+# TODO: fill in in_channels and out_channels
+in_channels = 5
+out_channels = 2
+
+layer3 = nn.Conv2d(in_channels=in_channels, 
+                        out_channels=out_channels,
+                        kernel_size=3,
+                        stride = 1, 
+                        padding = 0) # no padding
+
+
+out_3 = layer3(out_2)
+print('shape after 3rd layer: ', out_3.shape) # should print torch.Size([5, 2, 22, 22])
+
+# TODO: change start_dim so that we end up with a tensor of shape (5, 968)
+
+start_dim = 1 # CHANGE THIS! where should we start flattening the dimensions? 
+
+
+print('original output shape: ', out_3.shape)
+
+# nn.Flatten is implemented as layer, we first define the layer and then apply it
+flatten_layer = nn.Flatten(start_dim=start_dim)
+out = flatten_layer(out_3)
+
+print('flattened output shape: ', out.shape) # should print torch.Size([5, 968])
+
+class ConvNet(nn.Module):
+    def __init__(self, input_channels, num_classes):
+        super().__init__()
+
+        # convolutional layers
+        self.layer1 = nn.Conv2d(input_channels, 10, kernel_size=3)
+        self.layer2 = nn.Conv2d(10, 5, kernel_size=3)
+        self.layer3 = nn.Conv2d(5, 2, kernel_size=3)
+        
+        # Linear classifier
+        self.flatten = nn.Flatten(start_dim=1)
+        self.fc = nn.Linear(968, 10)
+        
+        # activations
+        self.activation = nn.ReLU()
+
+    def forward(self, x):
+        # TODO: define your forward pass
+        hid1 = self.layer1(x)
+        outp1 = self.activation(hid1)
+        hid2 = self.layer2(outp1)
+        outp2 = self.activation(hid2)
+        hid3 = self.layer3(hid2)
+        output = self.activation(hid3)
+
+
+
+        return output
+        
+batch_size = 9
+train_loader_X = torch.utils.data.DataLoader(dataset=X_data_train,
+                                           batch_size=batch_size,
+                                           shuffle=True,
+                                           drop_last=True)
+                                           
+for batch in train_loader_X:
+  print(batch.shape) # should print (batch_size, 1, 28, 28)
+  break
+  
+num_train_examples = len(X_data_train)
+# TODO: 
+num_batches = num_train_examples * 9
+
+print('No. of batches = ', num_batches)
+print('This should equal the length of the dataloader, i.e.', len(train_loader_X))
+
+def get_mnist(batch_size=128):
+  """ function to make the dataloader for the train and test set
+
+      Returns:
+        train_loader: Pytorch dataloader of training data
+        test_loader: Pytorch dataloader of testing data
+
+  """
+
+  transform_train = transforms.Compose([
+                 #   transforms.RandomCrop(size=28),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor()
+                ])
+
+  # Training dataset
+  train_data = MNIST(root='.', train=True, transform=transform_train)
+
+  # Define your data loader with specified batch_size and whether you want to shuffle dataset.
+  train_loader = torch.utils.data.DataLoader(train_data,
+                                             batch_size=batch_size,
+                                             shuffle=True,
+                                             pin_memory=True,
+                                             drop_last=True)
+
+
+  transform_test = transforms.Compose([
+                    transforms.ToTensor(),
+                ])
+  # Testing dataset
+  test_data = MNIST(root='.', train=False, transform=transform_test)
+
+  # Define your data loader with specified batch_size and whether you want to shuffle dataset.
+  test_loader = torch.utils.data.DataLoader(test_data,
+                                            batch_size=batch_size,
+                                            shuffle=False,
+                                            pin_memory=True)
+  return train_loader, test_loader
+  
+train_data = MNIST(root='.', train=True)
+x, y = train_data[0]
+print(type(x))
+print(type(transforms.ToTensor()(x)))
+
+train_loader, test_loader = get_mnist()
+
+for batch_idx, (data, target) in enumerate(train_loader):
+  print('Batch Index: {}. Batch Shape: {}. Target Size: {}'.format(batch_idx, data.shape, target.shape))
+  if batch_idx == 3:
+    break
+    
+train_loader, test_loader = get_mnist(batch_size=128)
+
+device = 'cpu' # device name (default is "cpu") even if we did not specify this. The other option is "cuda". We will see this later
+input_channels = 1
+num_classes = 10 # ten digits 0-9
+model = ConvNet(input_channels, num_classes).to(device) # creating an instance of our CNN et voila!
+
+#print a summary of the network
+print(model)
+
+# Put a sample through the network and observe the output size
+x_sample = x_sample.to(device)
+print("Output Size:", model(x_sample).shape)
+
+# Task find a loss function to represent cross entropy loss
+
+loss_function = nn.CrossEntropyLoss()
+
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
+
+def take_step(model, loss_function, data, optimizer, device):
+    # unpacking our data
+    x, labels = data
+
+    # TODO: transfer tensors onto device
+    x = x.to(device)
+    labels = labels.to(device)
+
+    # Forward pass
+    preds = model(x) 
+
+    loss = loss_function(preds, labels) 
+
+    # Backward pass
+    # For each parameter PyTorch accumulates gradients in one place, so we need to make sure to initialise them to 0
+    optimizer.zero_grad() 
+
+    # Compute the gradient
+    loss.backward()
+
+    # take a gradient step
+    optimizer.step()
+
+    return model, loss
+    
+def train_one_epoch(epoch, model, train_loader, optimizer, loss_function, device, print_freq):
+  
+  model = model.train()
+
+  for batch_idx, data in enumerate(train_loader):
+      # TODO: call the take_step function  
+      model, loss = take_step
+
+      # report progress
+      if batch_idx % print_freq == 0:
+          print(
+              '+ Epoch: {}. Iter: [{}/{} ({:.0f}%)]. Loss: {:.5f}.'
+              .format(
+                  epoch,
+                  batch_idx * len(data[0]),
+                  len(train_loader.dataset),
+                  100. * batch_idx / len(train_loader),
+                  loss / len(data[0]),
+              ),
+              flush=True)
+
+def eval_test(model, test_loader, loss_function, epoch, device):
+    model.eval()
+    test_loss = 0
+    correct = 0
+
+    with torch.no_grad():
+        for data in test_loader:
+          x, labels = data
+
+          # Move data and labels onto device
+          x = x.to(device)
+          labels = labels.to(device)
+
+          # Forward pass
+          logits = model(x)
+
+          # Accumulate test loss over all samples
+          test_loss += loss_function(logits, labels).item()
+
+          #  Monitor number of correctly classified samples
+          correct += (logits.max(1)[1] == labels).sum().item()
+
+    # compute average loss
+    test_loss /= len(test_loader.dataset)
+
+    # compute total accuracy
+    test_accuracy = 100. * correct / len(test_loader.dataset)
+
+    # printing
+    print('Test: Average Loss: {:.4f}, Accuracy: {}/{} ({:.0f})%)'.format(
+        test_loss, correct, len(test_loader.dataset), test_accuracy)
+        )
+    return test_loss, test_accuracy
+epoch_init = 0
+num_epochs = 5
+for epoch in range(epoch_init, num_epochs):
+  start = time.time()
+  train_one_epoch(epoch, model, train_loader, optimizer, loss_function, device, 100)
+  end = time.time()
+  print("Time to process one full epoch: {:.3f} seconds".format(end - start))
+  eval_test(model, test_loader, loss_function, epoch, device)
+  
+  device = 'cuda' # or change to 'cpu' if encounter RuntimeError: No CUDA GPUs are available
+model = ConvNet(input_channels=1, num_classes=10).to(device) # creating an instance of our CNN et voila!
+
+epoch_init = 0
+num_epochs = 5
+for epoch in range(epoch_init, num_epochs):
+  start = time.time()
+  train_one_epoch(epoch, model, train_loader, optimizer, loss_function, device, 100)
+  end = time.time()
+  print("Time to process one full epoch: {:.3f} seconds".format(end - start))
+  eval_test(model, test_loader, loss_function, epoch, device)
+  
+  
+  from pathlib import Path
+
+from torchvision.datasets import FashionMNIST
+
+data_path = Path.home() / './FashionMNIST'
+
+# Load dataset
+train_fashionmnist = FashionMNIST(data_path, train=True, download=True)
+x_train = train_fashionmnist.data.float()
+y_train = train_fashionmnist.targets
+
+test_fashionmnist = FashionMNIST(data_path, train=False, download=True)
+x_test = test_fashionmnist.data.float()
+y_test = test_fashionmnist.targets
+
+from random import randint
+import matplotlib.pyplot as plt 
+
+plt.figure(figsize=(10,10)) # specifying the overall grid size
+
+num_images = 25
+for i in range(num_images):
+  plt.subplot(5,5,i+1)    # the number of images in the grid is 5*5 (25)
+  idx = randint(0,len(x_train)-1)
+  plt.imshow(x_train[idx,:,:].squeeze(), cmap='gray')
+  plt.title(str(y_train[idx].numpy()))
+  plt.axis('off')
+plt.show()
+
+
+              
+
